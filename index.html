@@ -3451,5 +3451,396 @@ Sha Wan Rd, Shamshuipo, Kowloon, HK</textarea>
     document.getElementById('glareBack').style.opacity = '1';
   });
 </script>
+<!-- ==================== V16 擴充外掛模組：鍵盤微調 + QR 嵌入 Logo + 硬件認證角標 + UV黑稿/vCard導出 ==================== -->
+<div id="v16ToolbarModal" class="fixed bottom-4 right-4 z-40 bg-slate-900/95 backdrop-blur border border-indigo-500/40 rounded-2xl p-3.5 shadow-2xl max-w-sm w-full space-y-2.5 text-xs">
+  <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+    <span class="font-bold text-indigo-300 flex items-center gap-1.5">
+      🚀 V16 專業設計與印刷外掛箱
+    </span>
+    <button type="button" onclick="toggleV16Panel()" id="btnToggleV16" class="text-[11px] text-slate-400 hover:text-white px-1.5 py-0.5 rounded bg-slate-800">收起</button>
+  </div>
+
+  <div id="v16PanelBody" class="space-y-2.5">
+    <!-- 1. 鍵盤微調與對齊輔助 -->
+    <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-2.5 space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] text-slate-300 font-medium">🎯 目前選中：<strong id="v16ActiveBlockName" class="text-cyan-400">請點擊畫布區塊</strong></span>
+        <button type="button" onclick="centerSelectedBlockHorizontally()" class="text-[11px] bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white border border-indigo-500/40 px-2 py-0.5 rounded transition">
+          ↔ 水平置中
+        </button>
+      </div>
+      <p class="text-[10px] text-slate-400">💡 點擊畫布任何區塊後，可按鍵盤 <kbd class="px-1 py-0.5 bg-slate-800 rounded text-slate-200">↑↓←→</kbd> 微調 1px（按住 Shift 移動 10px）</p>
+    </div>
+
+    <!-- 2. QR Code 中央嵌入品牌徽章 -->
+    <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-2.5 space-y-1.5">
+      <div class="flex items-center justify-between">
+        <label class="flex items-center gap-1.5 text-amber-300 font-medium cursor-pointer">
+          <input type="checkbox" id="v16QrCenterBadge" onchange="saveV16State(); renderAll()" class="rounded bg-slate-900 border-slate-700 text-indigo-500">
+          <span>🔲 QR Code 中央嵌入品牌徽章 (Level-H)</span>
+        </label>
+      </div>
+      <div class="flex items-center gap-2">
+        <select id="v16QrBadgeType" onchange="saveV16State(); renderAll()" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-[11px] text-white w-1/2 focus:outline-none">
+          <option value="text" selected>文字徽章 (如 CF)</option>
+          <option value="logo">已上傳之公司 Logo</option>
+        </select>
+        <input type="text" id="v16QrBadgeText" value="CF" maxlength="4" placeholder="徽章文字" oninput="saveV16State(); renderAll()" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-[11px] text-white w-1/2 focus:outline-none">
+      </div>
+    </div>
+
+    <!-- 3. 硬件與認證角標列 -->
+    <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-2.5 space-y-1.5">
+      <div class="flex items-center justify-between">
+        <label class="flex items-center gap-1.5 text-emerald-300 font-medium cursor-pointer">
+          <input type="checkbox" id="v16ShowTechBadges" onchange="saveV16State(); renderAll()" class="rounded bg-slate-900 border-slate-700 text-indigo-500">
+          <span>🏅 顯示底部硬件/企業認證角標列</span>
+        </label>
+        <select id="v16BadgeSide" onchange="saveV16State(); renderAll()" class="bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-[10px] text-slate-300">
+          <option value="back" selected>顯示於背面</option>
+          <option value="front">顯示於正面</option>
+          <option value="both">正背面皆顯示</option>
+        </select>
+      </div>
+      <input type="text" id="v16TechBadgeString" value="NVIDIA RTX AI Partner  |  Custom Liquid Cooling  |  Enterprise IT" oninput="saveV16State(); renderAll()" placeholder="以 | 分隔多個角標" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-[11px] text-white focus:outline-none">
+    </div>
+
+    <!-- 4. 進階導出工具：獨立 vCard (.vcf) 與 局部 UV 黑稿分色圖 -->
+    <div class="grid grid-cols-2 gap-1.5 pt-1">
+      <button type="button" onclick="exportStandaloneVCardFile()" class="bg-slate-800 hover:bg-indigo-600 text-slate-200 hover:text-white border border-slate-700 py-1.5 px-2 rounded-lg text-[11px] font-medium transition flex items-center justify-center gap-1" title="下載標準 .vcf 電子名片檔，可透過 WhatsApp 直接發送">
+        <span>📱 下載 .vcf 通訊錄</span>
+      </button>
+      <button type="button" onclick="exportSpotUVMaskPNG()" class="bg-slate-800 hover:bg-rose-600 text-slate-200 hover:text-white border border-slate-700 py-1.5 px-2 rounded-lg text-[11px] font-medium transition flex items-center justify-center gap-1" title="生成印刷廠專用的局部 UV / 燙金純黑分色遮罩圖">
+        <span>✨ 導出局部 UV 黑稿</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ==================== V16 外掛核心邏輯 (無縫攔截與擴充主系統) ====================
+  const V16_STORAGE_KEY = 'CF_BRANDCARD_STUDIO_V16_PLUGIN';
+  let lastSelectedSide = 'front'; // 'front' | 'back'
+  let lastSelectedKey  = 'brand';
+
+  function toggleV16Panel() {
+    const body = document.getElementById('v16PanelBody');
+    const btn = document.getElementById('btnToggleV16');
+    const isHidden = body.classList.toggle('hidden');
+    btn.textContent = isHidden ? '展開' : '收起';
+  }
+
+  function saveV16State() {
+    try {
+      const state = {
+        qrBadge: document.getElementById('v16QrCenterBadge').checked,
+        qrBadgeType: document.getElementById('v16QrBadgeType').value,
+        qrBadgeText: document.getElementById('v16QrBadgeText').value,
+        showTechBadges: document.getElementById('v16ShowTechBadges').checked,
+        badgeSide: document.getElementById('v16BadgeSide').value,
+        badgeStr: document.getElementById('v16TechBadgeString').value
+      };
+      localStorage.setItem(V16_STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {}
+  }
+
+  function loadV16State() {
+    try {
+      const raw = localStorage.getItem(V16_STORAGE_KEY);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (typeof s.qrBadge === 'boolean') document.getElementById('v16QrCenterBadge').checked = s.qrBadge;
+      if (s.qrBadgeType) document.getElementById('v16QrBadgeType').value = s.qrBadgeType;
+      if (s.qrBadgeText !== undefined) document.getElementById('v16QrBadgeText').value = s.qrBadgeText;
+      if (typeof s.showTechBadges === 'boolean') document.getElementById('v16ShowTechBadges').checked = s.showTechBadges;
+      if (s.badgeSide) document.getElementById('v16BadgeSide').value = s.badgeSide;
+      if (s.badgeStr !== undefined) document.getElementById('v16TechBadgeString').value = s.badgeStr;
+    } catch (e) {}
+  }
+
+  // 1. 攔截滑鼠點擊以記錄最後選中的區塊，支援鍵盤方向鍵 1px 微調
+  const origFrontDown = frontCanvas.onmousedown;
+  frontCanvas.addEventListener('mousedown', (e) => {
+    const pt = getCanvasMousePt(frontCanvas, e);
+    const hit = hitTestFront(pt.x, pt.y);
+    if (hit) {
+      lastSelectedSide = 'front';
+      lastSelectedKey = hit;
+      const pos = getActiveFrontPos();
+      document.getElementById('v16ActiveBlockName').textContent = `正面 · ${pos[hit].label}`;
+    }
+  });
+
+  backCanvas.addEventListener('mousedown', (e) => {
+    const pt = getCanvasMousePt(backCanvas, e);
+    const hit = hitTestBack(pt.x, pt.y);
+    if (hit) {
+      lastSelectedSide = 'back';
+      lastSelectedKey = hit;
+      const bPos = getActiveBackPos();
+      document.getElementById('v16ActiveBlockName').textContent = `背面 · ${bPos[hit].label}`;
+    }
+  });
+
+  // 鍵盤方向鍵微調監聽器 (忽略在 input/textarea 內打字時的方向鍵)
+  window.addEventListener('keydown', (e) => {
+    const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+
+    const targetMap = lastSelectedSide === 'front' ? getActiveFrontPos() : getActiveBackPos();
+    const block = targetMap ? targetMap[lastSelectedKey] : null;
+    if (!block) return;
+
+    e.preventDefault();
+    const step = e.shiftKey ? 10 : 1;
+    if (lastSelectedSide === 'front' && lastSelectedKey === 'brand') {
+      block.autoRight = false;
+      document.getElementById('frontLogoPosPreset').value = 'custom';
+    }
+    if (e.key === 'ArrowUp') block.y -= step;
+    if (e.key === 'ArrowDown') block.y += step;
+    if (e.key === 'ArrowLeft') block.x -= step;
+    if (e.key === 'ArrowRight') block.x += step;
+
+    document.getElementById('dragCoordHint').textContent = `${block.label} (X:${block.x}, Y:${block.y})`;
+    renderAll(false);
+  });
+
+  // 一鍵將選中區塊水平置中
+  function centerSelectedBlockHorizontally() {
+    const W = isPortrait() ? 638 : 1063;
+    const targetMap = lastSelectedSide === 'front' ? getActiveFrontPos() : getActiveBackPos();
+    const block = targetMap ? targetMap[lastSelectedKey] : null;
+    if (!block) return;
+
+    if (lastSelectedSide === 'front' && lastSelectedKey === 'brand') {
+      block.autoRight = false;
+      document.getElementById('frontLogoPosPreset').value = 'custom';
+    }
+    if (block.centered) {
+      block.x = Math.round(W / 2);
+    } else {
+      block.x = Math.round((W - (block.w || 200)) / 2);
+    }
+    renderAll(false);
+    showAutoSaveFeedback('🎯 區塊已水平置中');
+  }
+
+  // 2. 升級 QR Code 渲染函數：支援 Level-H 高容錯與中央嵌入品牌徽章
+  const _origDrawStyledQRCode = window.drawStyledQRCode;
+  window.drawStyledQRCode = function(ctx, x, y, qrSize, qrPayload, cardBgHex, cardAccentHex, cardTextHex, qrColorStyle) {
+    const useBadge = document.getElementById('v16QrCenterBadge') && document.getElementById('v16QrCenterBadge').checked;
+    if (!useBadge) {
+      return _origDrawStyledQRCode(ctx, x, y, qrSize, qrPayload, cardBgHex, cardAccentHex, cardTextHex, qrColorStyle);
+    }
+
+    let fgColor = cardAccentHex, bgColor = cardBgHex;
+    if (qrColorStyle === 'theme_text') fgColor = cardTextHex;
+    else if (qrColorStyle === 'white_box') { fgColor = '#111827'; bgColor = '#FFFFFF'; }
+    else {
+      const bgRgb = hexToRgb(cardBgHex), acRgb = hexToRgb(cardAccentHex);
+      if (Math.sqrt((bgRgb.r - acRgb.r) ** 2 + (bgRgb.g - acRgb.g) ** 2 + (bgRgb.b - acRgb.b) ** 2) < 75) fgColor = cardTextHex;
+    }
+
+    const qrCanvas = document.createElement('canvas');
+    new QRious({
+      element: qrCanvas,
+      value: qrPayload,
+      size: 280,
+      level: 'H', // 30% 最高容錯率，確保中央嵌入徽章後依然秒掃
+      foreground: fgColor,
+      background: bgColor,
+      padding: qrColorStyle === 'white_box' ? 10 : 4
+    });
+
+    ctx.save();
+    if (qrColorStyle === 'white_box') {
+      ctx.fillStyle = '#FFFFFF'; ctx.strokeStyle = cardAccentHex + '44'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.roundRect(x - 6, y - 6, qrSize + 12, qrSize + 12, 10); ctx.fill(); ctx.stroke();
+    } else {
+      ctx.fillStyle = bgColor; ctx.strokeStyle = fgColor + '35'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.roundRect(x - 4, y - 4, qrSize + 8, qrSize + 8, 8); ctx.fill(); ctx.stroke();
+    }
+    ctx.drawImage(qrCanvas, x, y, qrSize, qrSize);
+
+    // 繪製 QR 中央品牌徽章
+    const badgeSize = Math.round(qrSize * 0.25);
+    const bx = Math.round(x + (qrSize - badgeSize) / 2);
+    const by = Math.round(y + (qrSize - badgeSize) / 2);
+
+    ctx.fillStyle = bgColor;
+    ctx.beginPath();
+    ctx.roundRect(bx - 3, by - 3, badgeSize + 6, badgeSize + 6, 6);
+    ctx.fill();
+
+    const badgeType = document.getElementById('v16QrBadgeType').value;
+    if (badgeType === 'logo' && uploadedLogo) {
+      const data = getFormData();
+      const proc = getProcessedLogo(bgColor, data.blendLogoWhite, data.whiteTolerance, data.brightenLogoDark, data.forceWhiteLogo);
+      ctx.drawImage(proc, bx, by, badgeSize, badgeSize);
+    } else {
+      ctx.fillStyle = fgColor;
+      ctx.beginPath();
+      ctx.roundRect(bx, by, badgeSize, badgeSize, 5);
+      ctx.fill();
+      ctx.fillStyle = bgColor;
+      const bText = (document.getElementById('v16QrBadgeText').value || 'CF').trim();
+      ctx.font = `800 ${Math.round(badgeSize * (bText.length > 2 ? 0.38 : 0.5))}px 'Montserrat', sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(bText, bx + badgeSize / 2, by + badgeSize / 2 + 1);
+    }
+    ctx.restore();
+  };
+
+  // 3. 繪製底部硬件與代理品牌認證角標列 (掛載於 renderFront 與 renderBack 之後)
+  function drawV16TechBadgesOnCanvas(ctx, side, data) {
+    const enabled = document.getElementById('v16ShowTechBadges') && document.getElementById('v16ShowTechBadges').checked;
+    if (!enabled) return;
+    const targetSide = document.getElementById('v16BadgeSide').value;
+    if (targetSide !== 'both' && targetSide !== side) return;
+
+    const rawStr = document.getElementById('v16TechBadgeString').value || '';
+    const badges = rawStr.split('|').map(s => s.trim()).filter(Boolean);
+    if (!badges.length) return;
+
+    const W = ctx.canvas.width, H = ctx.canvas.height;
+    const { backBg, backBrandColor, backTextColor } = getBackColorScheme(data);
+    const accent = side === 'front' ? data.accent : backBrandColor;
+    const textCol = side === 'front' ? data.text : backTextColor;
+
+    ctx.save();
+    ctx.font = `600 13px ${side === 'front' ? data.fontFrontEn : data.fontBackEn}`;
+    const pillPadX = 14, pillH = 24, gap = 10;
+    const widths = badges.map(b => ctx.measureText(b).width + pillPadX * 2);
+    const totalW = widths.reduce((a, b) => a + b, 0) + gap * (badges.length - 1);
+
+    let curX = Math.round((W - totalW) / 2);
+    const pillY = side === 'back' ? H - 125 : H - 46;
+
+    badges.forEach((bText, i) => {
+      const pw = widths[i];
+      ctx.fillStyle = accent + '16';
+      ctx.strokeStyle = accent + '55';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.roundRect(curX, pillY, pw, pillH, 12);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = textCol;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(bText, curX + pw / 2, pillY + pillH / 2 + 0.5);
+      curX += pw + gap;
+    });
+    ctx.restore();
+  }
+
+  const _origRenderFront = window.renderFront;
+  window.renderFront = function(data) {
+    _origRenderFront(data);
+    drawV16TechBadgesOnCanvas(document.getElementById('canvasFront').getContext('2d'), 'front', data);
+  };
+
+  const _origRenderBack = window.renderBack;
+  window.renderBack = function(data) {
+    _origRenderBack(data);
+    drawV16TechBadgesOnCanvas(document.getElementById('canvasBack').getContext('2d'), 'back', data);
+  };
+
+  // 4. 導出獨立 .vcf 電子名片檔案
+  function exportStandaloneVCardFile() {
+    const data = getFormData();
+    const vcardStr = buildQRPayload('vcard', '', data);
+    const blob = new Blob([vcardStr], { type: 'text/vcard;charset=utf-8;' });
+    const namePart = (data.nameEn || data.nameZh || data.company || 'Contact').replace(/\s+/g, '_');
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${namePart}.vcf`;
+    link.click();
+    showAutoSaveFeedback('📱 已下載 .vcf 電子名片檔');
+  }
+
+  // 5. 導出印刷廠專用「局部 UV / 燙金純黑分色稿 (Spot UV Mask)」
+  function exportSpotUVMaskPNG() {
+    const data = getFormData();
+    const savedBg = document.getElementById('colorBg').value;
+    const savedAccent = document.getElementById('colorAccent').value;
+    const savedText = document.getElementById('colorText').value;
+
+    // 暫時將背景轉為純白，強調色與文字轉為 100% 純黑 (#000000)，生成高對比 UV 黑稿
+    isExportingClean = true;
+    document.getElementById('colorBg').value = '#FFFFFF';
+    document.getElementById('colorAccent').value = '#000000';
+    document.getElementById('colorText').value = '#000000';
+    invalidateLogoCache();
+    renderAll(true);
+
+    const namePart = (data.nameEn || data.nameZh || data.company || 'Card').replace(/\s+/g, '_');
+    const link = document.createElement('a');
+    link.download = `${namePart}_Front_SpotUV_Mask_300dpi.png`;
+    link.href = document.getElementById('canvasFront').toDataURL('image/png', 1.0);
+    link.click();
+
+    // 還原原有配色
+    document.getElementById('colorBg').value = savedBg;
+    document.getElementById('colorAccent').value = savedAccent;
+    document.getElementById('colorText').value = savedText;
+    isExportingClean = false;
+    invalidateLogoCache();
+    renderAll(true);
+    showAutoSaveFeedback('✨ 已導出局部 UV 純黑分色稿');
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    loadV16State();
+    setTimeout(() => renderAll(true), 120);
+  });
+</script>
+<!-- ==================== V17 擴充外掛模組：智能磁吸對齊線 + 多圖層貼圖與品牌徽章牆 + 個人數碼落地頁生成 ==================== -->
+<div id="v17ToolbarModal" class="fixed bottom-4 left-4 z-40 bg-slate-900/95 backdrop-blur border border-cyan-500/40 rounded-2xl p-3.5 shadow-2xl max-w-sm w-full space-y-2.5 text-xs">
+  <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+    <span class="font-bold text-cyan-300 flex items-center gap-1.5">
+      ✨ V17 磁吸對齊 · 多圖層 · 數碼網頁外掛
+    </span>
+    <button type="button" onclick="toggleV17Panel()" id="btnToggleV17" class="text-[11px] text-slate-400 hover:text-white px-1.5 py-0.5 rounded bg-slate-800">收起</button>
+  </div>
+
+  <div id="v17PanelBody" class="space-y-2.5">
+    <!-- 1. 智能磁吸對齊輔助線開關 -->
+    <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between">
+      <label class="flex items-center gap-2 text-pink-300 font-medium cursor-pointer">
+        <input type="checkbox" id="v17EnableSnap" checked onchange="saveV17State()" class="rounded bg-slate-900 border-slate-700 text-pink-500">
+        <span>📏 啟用畫布拖曳「智能磁吸對齊線」</span>
+      </label>
+      <span id="v17SnapStatus" class="text-[10px] font-mono text-pink-400">±7px 吸附</span>
+    </div>
+
+    <!-- 2. 多圖層貼圖與代理硬件品牌徽章牆 -->
+    <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-2.5 space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="font-semibold text-indigo-300">🖼️ 自由圖片圖層 / 代理品牌牆</span>
+        <div class="flex gap-1">
+          <label class="bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-0.5 rounded text-[11px] cursor-pointer transition">
+            + 新增圖片層
+            <input type="file" accept="image/*" onchange="v17AddImageLayer(event)" class="hidden">
+          </label>
+          <button type="button" onclick="v17AddHardwareWallLayer()" class="bg-emerald-600/30 hover:bg-emerald-600 text-emerald-200 hover:text-white border border-emerald-500/40 px-2 py-0.5 rounded text-[11px] transition" title="在背面或正面加入硬件品牌矩陣">
+            + 品牌牆
+          </button>
+        </div>
+      </div>
+
+      <!-- 圖層管理列表 -->
+      <div id="v17LayerControls" class="hidden space-y-1.5 pt-1 border-t border-slate-800/80">
+        <div class="flex items-center gap-1.5">
+          <select id="v17LayerSelect" onchange="v17SelectLayer(this.value)" class="flex-1 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-[11px] text-white focus:outline-none"></select>
+          <select id="v17LayerSide" onchange="v17UpdateActiveLayer()" class="bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-[11px] text-cyan-300 focus:outline-none">
+            <option value="back">背面</option>
+            <option value="front">正面</option>
+          </select>
+          <button type="button" onclick="v17DeleteActiveLayer()" class="bg-rose-950 hover:bg-rose-7
 </body>
 </html>

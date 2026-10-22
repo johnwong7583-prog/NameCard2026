@@ -4142,5 +4142,219 @@ Sha Wan Rd, Shamshuipo, Kowloon, HK</textarea>
     }
   };
 </script>
+<!-- ==================== V19 擴充外掛模組：名片紙張底紋與材質模擬器（碳纖維、金屬拉絲、宣紙、亞麻） ==================== -->
+<div id="v19TextureBar" style="background: linear-gradient(90deg, #18181b 0%, #27272a 50%, #18181b 100%); border-bottom: 1px solid rgba(168,85,247,0.35); padding: 8px 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; z-index: 24;">
+  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+    <span style="font-weight: 700; color: #c084fc; display: flex; align-items: center; gap: 4px;">
+      🧵 紙張材質底紋：
+    </span>
+    <select id="v19TextureTarget" style="background: #0f172a; color: #e879f9; border: 1px solid #475569; border-radius: 6px; padding: 3px 6px; font-size: 11px; font-weight: 600; outline: none; cursor: pointer;">
+      <option value="both" selected>🔗 套用：正背面同步</option>
+      <option value="front">📄 僅套用：正面</option>
+      <option value="back">🔄 僅套用：背面</option>
+    </select>
+
+    <select id="v19TextureStyle" onchange="window.v19ApplyTexture()" style="background: #0f172a; color: #f8fafc; border: 1px solid #475569; border-radius: 6px; padding: 3px 8px; font-size: 11px; outline: none; cursor: pointer;">
+      <option value="none" selected>🚫 無材質 (平滑啞膠卡)</option>
+      <option value="forged_carbon">⬛ 鍛造碳纖維紋 (Forged Carbon)</option>
+      <option value="brushed_metal">🪙 精密金屬拉絲紋 (Brushed Metal)</option>
+      <option value="rice_paper">📜 極簡手工宣紙紋 (Rice Paper)</option>
+      <option value="fine_linen">🧵 微細立體亞麻紋 (Fine Linen Fabric)</option>
+    </select>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 8px;">
+    <span style="color: #cbd5e1; font-size: 11px;">紋理濃度：</span>
+    <input type="range" id="v19TextureOpacity" min="5" max="50" value="18" oninput="window.v19ApplyTexture()" style="width: 90px; cursor: pointer;" title="調整底紋不透明度">
+    <span id="v19TextureOpacityVal" style="font-family: monospace; color: #c084fc; font-size: 11px; width: 32px;">18%</span>
+  </div>
+</div>
+
+<script>
+(function() {
+  const V19_KEY = 'CF_BRANDCARD_STUDIO_V19_TEXTURE';
+
+  // 材質暫存狀態：{ front: 'none', back: 'none', opacity: 18 }
+  let v19State = { front: 'none', back: 'none', opacity: 18 };
+
+  window.saveV19State = function() {
+    try {
+      localStorage.setItem(V19_KEY, JSON.stringify(v19State));
+    } catch(e) {}
+  };
+
+  window.loadV19State = function() {
+    try {
+      const raw = localStorage.getItem(V19_KEY);
+      if (raw) {
+        const obj = JSON.parse(raw);
+        if (obj.front) v19State.front = obj.front;
+        if (obj.back) v19State.back = obj.back;
+        if (typeof obj.opacity === 'number') v19State.opacity = obj.opacity;
+      }
+    } catch(e) {}
+    const sel = document.getElementById('v19TextureStyle');
+    const range = document.getElementById('v19TextureOpacity');
+    const valSpan = document.getElementById('v19TextureOpacityVal');
+    if (sel) sel.value = v19State.front;
+    if (range) range.value = v19State.opacity;
+    if (valSpan) valSpan.textContent = v19State.opacity + '%';
+  };
+
+  window.v19ApplyTexture = function() {
+    const sel = document.getElementById('v19TextureStyle');
+    const range = document.getElementById('v19TextureOpacity');
+    const targetSel = document.getElementById('v19TextureTarget');
+    const valSpan = document.getElementById('v19TextureOpacityVal');
+    if (!sel || !range) return;
+
+    const val = sel.value;
+    const op = parseInt(range.value, 10) || 18;
+    const target = targetSel ? targetSel.value : 'both';
+    if (valSpan) valSpan.textContent = op + '%';
+
+    v19State.opacity = op;
+    if (target === 'both') {
+      v19State.front = val;
+      v19State.back = val;
+    } else if (target === 'front') {
+      v19State.front = val;
+    } else if (target === 'back') {
+      v19State.back = val;
+    }
+
+    window.saveV19State();
+    if (typeof window.renderAll === 'function') window.renderAll(false);
+  };
+
+  // 在 Canvas 上繪製動態物理材質底紋
+  function drawCanvasTexture(ctx, textureType, opacityPercent) {
+    if (!textureType || textureType === 'none' || opacityPercent <= 0) return;
+    const W = ctx.canvas.width, H = ctx.canvas.height;
+    ctx.save();
+    ctx.globalAlpha = opacityPercent / 100;
+
+    if (textureType === 'forged_carbon') {
+      // 鍛造碳纖維紋：生成高質感隨機碳纖碎布斑塊
+      ctx.fillStyle = '#000000';
+      for (let i = 0; i < 420; i++) {
+        const cx = (Math.sin(i * 12.9898) * 43758.5453) % 1 * W;
+        const cy = (Math.cos(i * 78.233) * 43758.5453) % 1 * H;
+        const cw = 18 + (i % 25);
+        const ch = 4 + (i % 8);
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate((i % 4) * 0.785); // 45度角交錯
+        ctx.fillStyle = i % 2 === 0 ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.22)';
+        ctx.fillRect(-cw/2, -ch/2, cw, ch);
+        ctx.restore();
+      }
+    } else if (textureType === 'brushed_metal') {
+      // 金屬拉絲紋：橫向微細金屬絲光線條
+      ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+      ctx.lineWidth = 0.8;
+      for (let y = 0; y < H; y += 3) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+      for (let y = 1; y < H; y += 3) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+        ctx.stroke();
+      }
+    } else if (textureType === 'rice_paper') {
+      // 極簡手工宣紙紋：細碎的手工紙漿纖維與微點
+      ctx.fillStyle = '#713f12';
+      for (let i = 0; i < 600; i++) {
+        const px = (Math.cos(i * 21.1) * 12345.6) % 1 * W;
+        const py = (Math.sin(i * 34.2) * 12345.6) % 1 * H;
+        ctx.fillRect(px, py, 1.2, 1.2);
+      }
+      ctx.fillStyle = '#ffffff';
+      for (let i = 0; i < 300; i++) {
+        const px = (Math.sin(i * 15.3) * 9876.5) % 1 * W;
+        const py = (Math.cos(i * 42.8) * 9876.5) % 1 * H;
+        ctx.fillRect(px, py, 1.5, 1.5);
+      }
+    } else if (textureType === 'fine_linen') {
+      // 微細亞麻布紋：交錯的經緯線條
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.14)';
+      ctx.lineWidth = 0.8;
+      for (let x = 0; x < W; x += 4) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+      }
+      for (let y = 0; y < H; y += 4) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+    }
+
+    ctx.restore();
+  }
+
+  function setupV19Integration() {
+    // 將 V19 材質工具列插入頂部導航欄或 V18 快捷列下方
+    const v18Bar = document.getElementById('v18QuickBar');
+    const headerEl = document.querySelector('header');
+    const tBar = document.getElementById('v19TextureBar');
+
+    if (v18Bar && v18Bar.parentNode && v18Bar.nextSibling !== tBar) {
+      v18Bar.parentNode.insertBefore(tBar, v18Bar.nextSibling);
+    } else if (headerEl && tBar && headerEl.nextSibling !== tBar) {
+      headerEl.parentNode.insertBefore(tBar, headerEl.nextSibling);
+    }
+
+    loadV19State();
+
+    // 攔截正面與背面渲染以疊加物理材質
+    const origRF = window.renderFront;
+    if (typeof origRF === 'function') {
+      window.renderFront = function(data) {
+        origRF(data);
+        const ctx = document.getElementById('canvasFront').getContext('2d');
+        drawCanvasTexture(ctx, v19State.front, v19State.opacity);
+      };
+    }
+
+    const origRB = window.renderBack;
+    if (typeof origRB === 'function') {
+      window.renderBack = function(data) {
+        origRB(data);
+        const ctx = document.getElementById('canvasBack').getContext('2d');
+        drawCanvasTexture(ctx, v19State.back, v19State.opacity);
+      };
+    }
+
+    // 同步攔截雙頁印刷 PDF 導出函數，確保材質也能完美印入 PDF
+    const origCreateBleed = window.createFullBleedCanvas;
+    if (typeof origCreateBleed === 'function') {
+      window.createFullBleedCanvas = function(sourceCanvas, side, data) {
+        const c = origCreateBleed(sourceCanvas, side, data);
+        const tType = side === 'front' ? v19State.front : v19State.back;
+        if (tType && tType !== 'none') {
+          const ctx = c.getContext('2d');
+          ctx.save();
+          // 在 3mm 出血畫布中央疊加材質
+          ctx.translate(35.5, 35.5);
+          drawCanvasTexture(ctx, tType, v19State.opacity);
+          ctx.restore();
+        }
+        return c;
+      };
+    }
+
+    window.renderAll(true);
+  }
+
+  if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', () => setTimeout(setupV19Integration, 200));
+  } else {
+    setTimeout(setupV19Integration, 200);
+  }
+})();
+</script>
 </body>
 </html>
